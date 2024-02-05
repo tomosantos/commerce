@@ -1,0 +1,105 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    {% if message %}
+        {% if alert %}
+            <div class="alert alert-success text-center mt-3" role="alert">
+                {{ message }}
+            </div>
+        {% else %}
+            <div class="alert alert-danger text-center mt-3" role="alert">
+                {{ message }}
+            </div>
+        {% endif %}
+    {% endif %}
+    
+    {% if not listing.isActive and user == listing.price.user %}
+        <div class="alert alert-success text-center mt-3" role="alert">
+            Congratulations! You won the Auction!
+        </div>
+    {% endif %}
+
+    <div class="row mx-3 my-3">
+        <h2> {{ listing.title }} </h2>
+    </div>
+
+    <div class="row">
+        <div class="col-4 p-4 mx-4">
+            <img src="{{ listing.imageUrl }}" alt="{{ listing.title }}" class="h-100 w-100">
+        </div>
+        <div class="col-7 my-4 mx-3">
+            <h4>Description:</h4>
+            <p class="text-start"> {{ listing.description }} </p>
+            <p> <strong>Owner:</strong> {{ listing.owner }} </p>
+    
+            <div class="row">
+                <div class="col-2">
+                    <h4> ${{ listing.price }} </h4>
+                </div>
+                {% if user.is_authenticated %}
+                    <form action="{% url 'newBid' id=listing.id %}" class="row" method="post">
+                        {% csrf_token %}
+                        <div class="col-7">
+                            <input type="number" min="0" class="form-control" name="newBid" placeholder="Add New Bid">
+                        </div>
+                        <div class="col-2">
+                            <input type="submit" class="btn btn-primary rounded-pill" value="Add">
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+                
+            <div class="text-center mt-5">
+                {% if user.is_authenticated and listing.isActive %}
+                    {% if isOwner %}
+                        <form action="{% url 'endAuction' id=listing.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="submit" class="btn btn-warning rounded-pill w-100 mb-2" value="Close Auction">
+                        </form>
+                    {% endif %}
+                    {% if verify_watchlist %}
+                        <form action="{% url 'removeWatchlist' id=listing.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="submit" class="btn btn-danger rounded-pill w-100" value="Remove from watchlist">
+                        </form>
+                    {% else %}
+                        <form action="{% url 'addWatchlist' id=listing.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="submit" class="btn btn-success rounded-pill w-100" value="Add to a watchlist">
+                        </form>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="row mx-2">
+        <h2> Comments: </h2>
+    </div>
+
+    {% for com in comments %}
+        <div class="row m-3 mb-3">
+            <div class="card col-8">
+                <div class="card-body">
+                  <blockquote class="blockquote mb-0">
+                    <p>{{ com.message }}</p>
+                    <footer class="blockquote-footer">{{ com.author }}</footer>
+                  </blockquote>
+                </div>
+              </div>
+        </div>
+    {% endfor %}
+
+
+    {% if user.is_authenticated %}
+        <form class="row mx-1 mb-3" action="{% url 'newComment' id=listing.id %}" method="post">
+            {% csrf_token %}
+            <div class="col-6">
+                <input type="text" class="form-control" name="newComment" placeholder="Add New Comment">
+            </div>
+            <div class="col-6">
+                <input type="submit" class="btn btn-success rounded-pill" value="Add Comment">
+            </div>
+        </form>
+    {% endif %}
+
+{% endblock %}
